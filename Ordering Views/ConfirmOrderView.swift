@@ -12,7 +12,7 @@ struct ConfirmOrderView: View {
     @State var amount: Decimal = 0.00
     @FocusState var isAmountFocused: Bool
     @State var navigateToOrderCompletion: Bool = false
-    @State var totalAmount: Decimal = 0.00
+    //@State var totalAmount: Decimal = 0.00
     
     func startOrder (completion: @escaping (String?) -> Void) {
         guard let url = URL(string: "https://flossy-innate-shroud.glitch.me/create-payment-intent") else {
@@ -22,8 +22,8 @@ struct ConfirmOrderView: View {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        totalAmount = amount*Decimal(quantity)
-        request.httpBody = try? JSONEncoder().encode(["amount": totalAmount])
+        amount = amount*Decimal(quantity)
+        request.httpBody = try? JSONEncoder().encode(["amount": amount])
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             guard let data = data, error == nil,
@@ -39,9 +39,11 @@ struct ConfirmOrderView: View {
         }.resume()
     }
     
+    /*
     func calculateTotalAmount() {
         totalAmount = amount*Decimal(quantity)
     }
+     */
     
     var body: some View {
         VStack(alignment: .leading) {
@@ -55,7 +57,7 @@ struct ConfirmOrderView: View {
                 .frame(height: 3)
                 .overlay(.black)
                 .padding([.top, .bottom])
-            TotalView(total: $totalAmount)
+            TotalView(total: $amount)
             Button {
                 startOrder {clientSecret in
                     PaymentConfig.shared.paymentIntentClientSecret = clientSecret
@@ -84,14 +86,11 @@ struct ConfirmOrderView: View {
         .onChange(of: quantity) {
             quantityStr = String(quantity)
         }
-        .onChange(of: amount) { _ in
-            calculateTotalAmount()
-        }
         .onTapGesture {
             isAmountFocused = false
         }
         .navigationDestination(isPresented: $navigateToOrderCompletion) {
-            OrderCompletion(total: $totalAmount)
+            OrderCompletion(total: $amount)
         }
     } // end of nav stack
     
